@@ -1,47 +1,35 @@
 # Physical Badge OP-TEE Applications
 
 This repository is the single source of truth for project-owned OP-TEE
-Trusted Applications (TAs), their Rich Execution Environment (REE) host
-applications, and integration tests.
+Trusted Applications (TAs), their Rich Execution Environment (REE) clients,
+and shared ABI headers. OP-TEE OS itself lives in `sources/optee`.
 
-OP-TEE OS itself is intentionally not included here. It is maintained in the
-separate `sources/optee` project.
-
-## Layout
+## Current layout
 
 ```text
 infra-test/
-  include/                 Shared TA/REE ABI
-  ta/                      OP-TEE infrastructure test TA
-  host/                    REE test client (`ta-test-app`)
-secure-uart/
-  include/                 Shared Secure UART TA/REE ABI
-  ta/                      Secure UART TA
-  host/daemon/             REE UART daemon
-tests/
-  secure-uart-test/        Cross-component target test suite
-LICENSES/                  License texts referenced by Yocto recipes
+  include/test_ta.h       Shared TA/REE ABI
+  ta/                     OP-TEE infrastructure test TA
+  host/                   REE test client (`ta-test-app`)
+LICENSES/                 Recipe license texts
+docs/architecture.md      Ownership and integration rules
 ```
 
-The headers below are ABI contracts and must be used by both sides rather
-than copied into individual components:
+The infrastructure suite covers Client/TA echo, random generation, AES
+round-trip, HMAC-SHA256, and Secure Storage. Secure UART sources and packages
+were removed from the active project on 2026-08-20.
 
-- `infra-test/include/test_ta.h`
-- `secure-uart/include/secure_uart_ta.h`
-
-## Yocto build
-
-From the workspace root:
+## Build and target test
 
 ```sh
 source layers/openembedded-core/oe-init-build-env \
     build-nodistro-stm32mp15-disco
 bitbake optee-ta-test ta-test-app
-bitbake optee-ta-secure-uart secure-uart-daemon secure-uart-test
 ```
 
-The Repo manifest fetches and pins this checkout. The custom layer consumes
-that exact working tree through `externalsrc`; individual recipes do not fetch
-or select revisions independently.
+```sh
+ta-test-app --verbose
+```
 
-See `docs/architecture.md` for ownership and dependency rules.
+The Repo manifest pins this checkout. Recipes consume the same working tree
+through `externalsrc` and do not select independent revisions.
